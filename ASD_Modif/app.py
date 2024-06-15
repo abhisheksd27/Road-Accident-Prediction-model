@@ -1,4 +1,5 @@
 import flask
+import os
 from flask import render_template, request, jsonify, session
 from flask_session import Session
 import pandas as pd
@@ -12,14 +13,16 @@ from twilio.rest import Client
 import geocoder
 import json
 from geopy.geocoders import Nominatim
+from dotenv import load_dotenv
+load_dotenv()
 
-account_sid = 'AC0713ef49784ac8b9e7fa3d325cd7c5e3' 
-auth_token = '7f92675e0c56a25f8db0e3615dd1fdf5'
+account_sid = os.getenv('TWILIO_ACCOUNT_SID')
+auth_token = os.getenv('TWILIO_AUTH_TOKEN')
 client = Client(account_sid, auth_token)
 
 
 # The Twilio phone number
-from_number = '+12052364584'
+from_number = os.getenv('TWILIO_FROM_NUMBER')
 
 app = flask.Flask(__name__, template_folder='Templates')
 app.config["SESSION_PERMANENT"] = False
@@ -27,10 +30,10 @@ app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
 #code for connection
-app.config['MYSQL_HOST'] = 'localhost' #hostname
-app.config['MYSQL_USER'] = 'root' #username
-app.config['MYSQL_PASSWORD'] = '' #password
-app.config['MYSQL_DB'] = 'accient_severity' #database name
+app.config['MYSQL_HOST'] = os.getenv('MYSQL_HOST')
+app.config['MYSQL_USER'] = os.getenv('MYSQL_USER')
+app.config['MYSQL_PASSWORD'] = os.getenv('MYSQL_PASSWORD')
+app.config['MYSQL_DB'] = os.getenv('MYSQL_DB')
 
 mysql = MySQL(app)
 @app.route('/')
@@ -315,9 +318,9 @@ def detect():
 
 def getpred(longtitude, latitude, roveg, typeveg, cclass):
     
-    #accesskey = "4760ff014bc58270f85ed56767ca215e"
-    accesskey = "9049542e1e37e55f186381e0fcbd2053"
-    base_url = "http://api.weatherstack.com/current?"
+  
+    accesskey = ""
+    base_url = ""
     full_url = base_url+"access_key="+accesskey+"&query="+latitude+","+longtitude
     response = requests.get(full_url) 
     x = response.json()
@@ -479,8 +482,7 @@ def futurepred(longtitude, latitude, roveg, typeveg, cclass):
        nextdatetime = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
        userid    = session.get("userid")
        
-       #full_url = "https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/"+latitude+","+longtitude+"/"+nextdatetime+"/"+nextdatetime+"?key=ZCUDMRLGTXW82RRHXH336NCAY"
-       full_url = "https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/"+latitude+","+longtitude+"?unitGroup=us&key=ZCUDMRLGTXW82RRHXH336NCAY"
+       full_url = "https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/"+latitude+","+longtitude+"?unitGroup=us&key="
        response = requests.get(full_url) 
        asc = response.text
        weatherdata =  json.loads(asc)
@@ -617,12 +619,7 @@ def futurepred(longtitude, latitude, roveg, typeveg, cclass):
        elif int(typeveg) == 6:
           typeveg2 = 'Other vehicle'
           
-       #accesskey = "4760ff014bc58270f85ed56767ca215e"
-       """accesskey = "992405b6d4fbbd002fce6982883a4c17"
-       base_url = "http://api.weatherstack.com/current?"
-       full_url = base_url+"access_key="+accesskey+"&query="+latitude+","+longtitude
-       response = requests.get(full_url) 
-       x = response.json()"""
+      
        
        place = "dem"#x["location"]["name"]
       
@@ -735,8 +732,8 @@ def getcities():
 def mapseverity():
     result = ''
     if flask.request.method == 'POST':
-        access_key = "992405b6d4fbbd002fce6982883a4c17"
-        base_url = "http://api.weatherstack.com/current?"
+        access_key = ""
+        base_url = ""
         extractedValues = request.form['extractedValues']
         livevehicle = request.form['livevehicle']
         livecasuality = request.form['livecasuality']
@@ -883,5 +880,5 @@ def sendmail():
         
         return "1"
 
-if __name__ == '__main__':
-    app.run(debug=False)
+# if __name__ == '__main__':
+#     app.run(debug=False)
