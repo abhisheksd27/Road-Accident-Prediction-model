@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, Intial-scale=1">
+	<title>Accident severity prediction</title>
+	<link rel= "stylesheet" type= "text/css" href= "{{ url_for('static', filename = 'style.css') }}">
+    <script src="{{ url_for('static', filename = 'jquery.js') }}"></script>
+
+	<style type="text/css">
+		body{
+			width:100%;
+			margin: auto;
+			font-family: Verdana, sans-serif;
+		  	background-image: url("{{ url_for('static', filename = 'login.jpg') }}");
+		  	background-position: center;
+		  	background-repeat: no-repeat;
+		  	background-size: cover;
+		  }
+		  .loader{
+		    position:fixed;
+		    width:100%;
+		    left:0;right:0;top:0;bottom:0;
+		    background-color: rgba(255,255,255,0.7);
+		    z-index:9999;
+		    display:none;
+		}
+
+		@-webkit-keyframes spin {
+		  from {-webkit-transform:rotate(0deg);}
+		  to {-webkit-transform:rotate(360deg);}
+		}
+
+		@keyframes spin {
+		  from {transform:rotate(0deg);}
+		  to {transform:rotate(360deg);}
+		}
+
+		.loader::after {
+		    content:'';
+		    display:block;
+		    position:absolute;
+		    left:48%;top:40%;
+		    width:40px;height:40px;
+		    border-style:solid;
+		    border-color:black;
+		    border-top-color:transparent;
+		    border-width: 4px;
+		    border-radius:50%;
+		    -webkit-animation: spin .8s linear infinite;
+		    animation: spin .8s linear infinite;
+		}
+	</style>
+</head>
+
+<body id="home">
+<div class="loader hide"></div>
+<header><h2>Accident Severity Detection</h2></header>
+<br><br>
+<div class="loginanbody">
+<br>
+<center><span class="red" id="errormsg"></span></center>
+<center>
+<form>
+<table>
+<tr>
+<th>Phone</th>
+<td>
+	<input type="text" name="phone" id="phone" placeholder="Enter the phone" required="true">
+</td>
+</tr>
+<tr>
+<th>Password</th>
+<td>
+	<input type="password" name="password" id="password" placeholder="Enter the password" required="true">
+</td>
+</tr>
+</table>
+<br>
+<button type="button" class="button loginbutton" id="loginbtn">Login</button><br><br>
+</form>
+<center><span class="red">Not yet registered? Please <a href="{{ url_for('registeruser') }}">Register</a><br><br></span></center>
+</center>
+</div>
+<script type="text/javascript">
+	$("#loginbtn").click(function(){
+		$("#errormsg").html("");
+		let phone     = $("#phone").val();
+		let password  = $("#password").val();
+
+		if (phone == ''){
+			$("#phone").focus();
+			alertdata("Phone")
+		}else if (password == ''){
+			$("#password").focus();
+			alertdata("Password")
+		}else{
+			$.ajax({
+				url:"/login", 
+				type: "post", 
+				dataType: 'json',
+				data: {"phone":phone, "password":password},
+				beforeSend: function(){
+			        $(".loader").show();
+			    },
+			    success: function(output){
+			    	$(".loader").hide();
+			    	if (output == 0){
+			    		errmsg = 'Username and Password does not match!'
+			    		$("#errormsg").html(errmsg);
+			    	}else if (output == 1){
+			    		$("#errormsg").html("");
+			    		location.href = "{{ url_for('main') }}"
+			    	}else{
+			    		alert("Something went wrong! Please try again.")
+			    	}
+			    },
+			    error:function(){
+            		$(".loader").hide();
+            		alert("Something went wrong! Please try again.")
+            	}
+			});
+		}
+	});
+
+	function alertdata(message){
+		let msg = "Enter Valid "+message   
+		alert(msg)
+		return false
+	}
+</script>
+</body>
+</html>
+
+
+
+

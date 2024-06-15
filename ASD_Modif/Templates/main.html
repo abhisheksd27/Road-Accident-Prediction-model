@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, Intial-scale=1">
+  <title>Accident Prediction</title>
+    <!-- <link rel="stylesheet" href="{{ url_for('static', filename = 'bootstrap.css') }}"> -->
+    <script src='https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.js'></script>
+    <link href='https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.css' rel='stylesheet' />
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename = 'index.css') }}">
+    <script src="{{ url_for('static', filename = 'jquery.js') }}"></script>
+    <script src="{{ url_for('static', filename = 'cities.js') }}"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+
+    <style type="text/css">
+
+      .select2-container--default{
+        height: 30px !important;
+        line-height: 32px !important;
+      }
+
+      .specl .select2-container{
+        width: 30% !important;
+        text-align: left;
+      }
+
+      .select2{
+        margin-bottom: 10px;
+        text-align: left;
+      }
+
+      .route-settings {
+        padding: 5px
+      }
+
+      #my-map {
+        flex: 1;
+      }
+
+
+      /* The switch - the box around the slider */
+      .switch {
+        position: relative;
+        display: inline-block;
+        width: 30px;
+        height: 17px;
+      }
+
+      /* Hide default HTML checkbox */
+      .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+
+      /* The slider */
+      .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        -webkit-transition: .4s;
+        transition: .4s;
+      }
+
+      .slider:before {
+        position: absolute;
+        content: "";
+        height: 13px;
+        width: 13px;
+        left: 2px;
+        bottom: 2px;
+        background-color: white;
+        -webkit-transition: .4s;
+        transition: .4s;
+      }
+
+      input:checked+.slider {
+        background-color: #2196F3;
+      }
+
+      input:focus+.slider {
+        box-shadow: 0 0 1px #2196F3;
+      }
+
+      input:checked+.slider:before {
+        -webkit-transform: translateX(13px);
+        -ms-transform: translateX(13px);
+        transform: translateX(13px);
+      }
+
+      /* Rounded sliders */
+      .slider.round {
+        border-radius: 17px;
+      }
+
+      .slider.round:before {
+        border-radius: 50%;
+      }
+
+      .maplibregl-map {
+        overflow: visible !important;
+    }
+
+    </style>
+</head>
+
+<body style="overflow-x: hidden;">
+<div class="loader hide"></div>
+<div style="position:absolute; top:2%; left:97%">
+  <img src="{{ url_for('static', filename = 'logout.jpg') }}" id="logoutbtn" height="35" width="35" style="border-radius: 3px; cursor: pointer;">
+</div>
+<div style="position:absolute; top:2%; left:94%">
+  <img src="{{ url_for('static', filename = 'report.jpg') }}" id="reportpagebtn" height="35" width="35" style="border-radius: 3px; cursor: pointer;">
+</div>
+<div class="container right-panel-active">
+  <!-- Sign Up -->
+  <div class="container__form container--signup">
+    <form action="#" class="form" id="form1">
+      <h2 class="form__title">Live Zone Severity</h2>
+      <select class="input" required id="livecasuality">
+        <option value="">My Role</option>
+        <option value="0" selected>Driver</option>
+        <option value="1">Passenger</option>
+        <option value="2">Pedestrian</option>
+      </select>
+      <select class="input" required id="livevehicle">
+        <option value="">I am Driving/ Traveling In</option>
+        <option value="0">Agri vehicle</option>
+        <option value="1" selected>Bus</option>
+        <option value="2">Car</option>
+        <option value="3">Goods Vehicle</option>
+        <option value="4">Motorcycle</option>
+        <option value="5">Pedal cycle</option>
+        <option value="6">Other vehicle</option>
+      </select>
+      <select class="input" required id="liveroad">
+        <option value="">The Vehicle Is At</option>
+        <option value="0" selected>High Way</option>
+        <option value="3">Motor Way</option>
+        <option value="4">Rural(Others)</option>
+      </select><br>
+      <label id="betweentwo" style="cursor: pointer;">Trace Upto My Destination</label>
+      <button class="btn" id="livedetect">Detect Live Location!</button>
+    </form>
+  </div>
+
+  <!-- Sign In -->
+  <div class="container__form container--signin">
+    <form action="#" class="form" id="form2">
+      <h2 class="form__title">Other Zone Severity</h2>
+
+      <select id="roveh" required class="input1">
+          <option value="">Select Road Type</option>
+          <option value="0">A - Type</option>
+          <option value="1">A(M) - Type</option>
+          <option value="2">B - Type</option>
+          <option value="3">Motor way - Type</option>
+          <option value="4">Unclassified - Type</option>
+      </select>
+
+      <select id="roadsurf" required class="input1">
+        <option value="">Select Road Surface</option>
+        <option value="0">Dry</option>
+        <option value="1">Frost</option>
+        <option value="2">Flood</option>
+        <option value="3">Snow</option>
+        <option value="4">Wet</option>
+      </select>
+
+      <select id="light" required class="input1">
+        <option value="">Select Light Condition</option>
+        <option value="0">No street lighting</option>
+        <option value="1">Street lighting unknown</option>
+        <option value="2">Street lights present and lit</option>
+        <option value="3">Darkness</option>
+      </select>
+
+      <select id="weather" required class="input1">
+        <option value="">Select Weather Type</option>
+        <option value="0">Fine without high winds</option>
+        <option value="1">Fog or mist – if hazard</option>
+        <option value="2">Fine with high winds</option>
+        <option value="3">Other</option>
+        <option value="4">Raining without high winds</option>
+        <option value="5">Raining with high winds</option>
+        <option value="6">Snowing without high winds</option>
+        <option value="7">Snowing with high winds</option>
+        <option value="8">Unknown</option>
+      </select>
+
+      <select id="cclass" required class="input1">
+        <option value="">Select Casuality Class</option>
+        <option value="0">Driver</option>
+        <option value="1">Passenger</option>
+        <option value="2">Pedestrian</option>
+      </select>
+
+      <select id="typeveh" required class="input1">
+        <option value="">Vehicle Type</option>
+        <option value="0">Agri vehicle</option>
+        <option value="1">Bus</option>
+        <option value="2">Car</option>
+        <option value="3">Goods Vehicle</option>
+        <option value="4">Motorcycle</option>
+        <option value="5">Pedal cycle</option>
+        <option value="6">Other vehicle</option>
+      </select>
+
+      <input type="text" required class="input1" id="place" placeholder="Place" style="width: 95%;">
+
+      <div id="refid"></div>
+      <label id="predlabel" style="display: none;"><center>Prediction</center></label>
+      <input type="text" class="input1" id="otherlocpred" style="display: none" disabled="true">
+      <button class="btn" id="findotherlocation">Find Severity!</button>
+    </form>
+  </div>
+
+  <!-- Overlay -->
+  <div class="container__overlay">
+    <div class="overlay">
+      <div class="overlay__panel overlay--left">
+        <button class="btn" id="signIn">Other Zone!</button>
+      </div>
+      <div class="overlay__panel overlay--right">
+        <button class="btn" id="signUp">Live Severity!</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<button id="myBtn" style="display: none;"></button>
+<!-- The Modal -->
+<div id="myModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <span class="close" id="close">&times;</span>
+      <h2>Live Accident Severity Prediction</h2>
+    </div>
+    <br>
+    <center><input type="text" class="input1" style="text-align: center; display: none;width: 95%" disabled id="liveresult"></center>
+    <br>
+    <div class="modal-body">
+      <table style="width: 95%; margin: auto;padding: 10px; border-spacing: 20px;">
+        <tr>
+          <td style="text-align: left;"><b>Location</b></td>
+          <td id="tlocation"></td>
+          <td style="text-align: left;"><b>Region</b></td>
+          <td id="tregion"></td>
+        </tr>
+         <tr>
+          <td style="text-align: left;"><b>Time</b></td>
+          <td id="tlocaltime"></td>
+          <td style="text-align: left;"><b>Temperature</b></td>
+          <td id="ttemperature"></td>
+        </tr>
+        <tr>
+          <td style="text-align: left;"><b>Road Type</b></td>
+         <td id="troveg"></td>
+          <td style="text-align: left;"><b>Road Surface</b></td>
+         <td id="tbasicroadsurf"></td>
+        </tr>
+        <tr>
+          <td style="text-align: left;"><b>Light</b></td>
+          <td id="tlight"></td>
+          <td style="text-align: left;"><b>Weather</b></td>
+          <td id="tweather"></td>
+        </tr>
+         <tr>
+          <td style="text-align: left;"><b>Role</b></td>
+          <td id="tcclass"></td>
+          <td style="text-align: left;"><b>Vehicle</b></td>
+          <td id="ttypeveg"></td>
+        </tr>
+        <div id="livedownloadreport" style="font-weight: bold; text-align: center;display: none;"></div>
+      </table>
+    </div>
+  </div>
+</div>
+
+<button id="myBtn1" style="display: none;"></button>
+<!-- The Modal -->
+<div id="myModal1" class="modal" style="margin-top: -50px !important">
+  <div class="modal-content">
+    <div class="modal-header">
+      <span class="close" id="close1">&times;</span>
+      <h2>Live Accident Severity Prediction</h2>
+    </div>
+    <div class="modal-body specl" style="height: 600px; overflow-y:scroll;">
+      <br>
+      <select id="predtype" required class="input2" style="width: 30%; margin-left: 25px">
+          <option value="current">From current Location</option>
+          <option value="differentloc">Different Location</option>
+      </select><br>
+      <center>
+        <div id="fromfields" style="display: none;">
+        <label style="font-weight: bold; margin-bottom: 15px">From</label><br>
+        <select class="input2" id="frominputDistrict">
+          <option value="">Select Location</option>
+        </select>
+        </div><br>
+        <label style="font-weight: bold; margin-bottom: 15px">To</label><br>
+        <select class="input2" id="inputDistrict">
+          <option value="">Select Location</option>
+        </select>
+        <br>
+        <span id="curloc"></span><br>
+        <br>
+        <button type="button" id="inputDistrictbtn" class="detectbtn">Detect</button> 
+        <br><br>
+        <label style="font-weight:bold; cursor:pointer; display:none" id="reportdownload">Download the report here!</label>
+        <br><br>
+
+          <div id="my-map"></div>
+
+
+        <br><br>
+        <div id="detectfield">
+          
+        </div>
+      </center>
+    </div>
+    </div>
+</div>
+<div class="route-settings" style="display: none;">
+  <label class="switch">
+    <input id="showDetails" type="checkbox" onclick="drawRoute()">
+    <span class="slider round"></span>
+  </label> 
+  Show route details
+</div>
+<button id="myBtn2" style="display: none;"></button>
+<!-- The Modal -->
+<div id="myModal2" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <span class="close" id="close1">&times;</span>
+      <h2>Accident Severity Detection</h2>
+    </div>
+    <div class="modal-body">
+         <b><label>Select Date and Time</label></b><br>
+         <div style="margin-bottom: 10px;display: flex; align-content: center; justify-content: center; align-items: center;"> 
+            <input type="datetime-local" name="nextdatetime" id="nextdatetime" required class="input2" style="padding: 0.5rem 0.5rem; width: 40%">
+            <button type="button" id="inputDatebtn" class="detectbtn" style="width: 35%">Detect</button></div>
+            <br>
+            <center>
+              <input type="text" class="input1" style="text-align: center; display: none;width: 95%" disabled id="liveresult1">
+            </center>
+            <br>
+              <table style="width: 95%; margin: auto;padding: 10px; border-spacing: 20px;" id="futuretable" class="hide">
+                <tr>
+                  <td style="text-align: left;"><b>Location</b></td>
+                  <td id="tlocation1"></td>
+                  <td style="text-align: left;"><b>Region</b></td>
+                  <td id="tregion1"></td>
+                </tr>
+                 <tr>
+                  <td style="text-align: left;"><b>Time</b></td>
+                  <td id="tlocaltime1"></td>
+                  <td style="text-align: left;"><b>Temperature</b></td>
+                  <td id="ttemperature1"></td>
+                </tr>
+                <tr>
+                  <td style="text-align: left;"><b>Road Type</b></td>
+                 <td id="troveg1"></td>
+                  <td style="text-align: left;"><b>Road Surface</b></td>
+                 <td id="tbasicroadsurf1"></td>
+                </tr>
+                <tr>
+                  <td style="text-align: left;"><b>Light</b></td>
+                  <td id="tlight1"></td>
+                  <td style="text-align: left;"><b>Weather</b></td>
+                  <td id="tweather1"></td>
+                </tr>
+                 <tr>
+                  <td style="text-align: left;"><b>Role</b></td>
+                  <td id="tcclass1"></td>
+                  <td style="text-align: left;"><b>Vehicle</b></td>
+                  <td id="ttypeveg1"></td>
+                </tr>
+                <div id="livedownloadreport1" style="font-weight: bold; text-align: center;display: none;"></div>
+              </table>
+    </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+
+  $("select").select2();
+
+
+  const signInBtn  = document.getElementById("signIn");
+  const signUpBtn  = document.getElementById("signUp");
+  const fistForm   = document.getElementById("form1");
+  const secondForm = document.getElementById("form2");
+  const container  = document.querySelector(".container");
+
+  signInBtn.addEventListener("click", () => {
+    container.classList.remove("right-panel-active");
+  });
+
+  signUpBtn.addEventListener("click", () => {
+    container.classList.add("right-panel-active");
+  });
+
+  fistForm.addEventListener("submit", (e) => e.preventDefault());
+  secondForm.addEventListener("submit", (e) => e.preventDefault());
+
+  
+  let longitude = 0;
+  let latitude = 0;
+  if(navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+          latitude   = position.coords.latitude;
+          longitude  = position.coords.longitude;
+        });
+  }
+
+  $("#predtype").change(function(){
+    var predtype = $("#predtype").val()
+    if (predtype == 'current'){
+      $("#fromfields").hide()
+    }else{
+      $("#fromfields").show()
+
+    }
+  })
+
+  $("#livedetect").click(function(){
+    var liveroad = $("#liveroad").val();
+    var livevehicle = $("#livevehicle").val();
+    var livecasuality =  $("#livecasuality").val();
+    $.ajax({
+        url:"/detectlive", 
+        type: "post", 
+        dataType: 'json',
+        data: {"longitude":longitude, "latitude":latitude, "liveroad":liveroad, "livevehicle":livevehicle, "livecasuality":livecasuality},
+        beforeSend: function(){
+              $("#livebtn").attr("disabled", "true");
+              $(".loader").show();
+          },
+          success: function(output) {
+              $("#livebtn").removeAttr("disabled", "true");
+              $("#tlocation").text(output.curlocation);
+              $("#tregion").html(output.region);
+              $("#tlocaltime").html(output.localtime);
+              $("#ttemperature").html(output.temperature);
+              $("#troveg").html(output.sroveg);
+              $("#tbasicroadsurf").html(output.basicroadsurf);
+              $("#tlight").html(output.light);
+              $("#tweather").html(output.weather);
+              $("#tcclass").html(output.scclass);
+              $("#ttypeveg").html(output.stypeveg);
+
+              if (output.prediction == "Serious Accident"){
+                $("#liveresult").removeClass("greenhold");
+                $("#liveresult").addClass("redhold");
+                $("#liveresult").val("Zone Detected As Serious Accidental!");
+              }else{
+                $("#liveresult").addClass("greenhold");
+                $("#liveresult").removeClass("redhold");
+                $("#liveresult").val("Zone Detected As Slight Accidental!");
+              }
+              $("#livedownloadreport").show();
+              $("#livedownloadreport").html("The Accident Reference ID is : "+output.refid+". <span style='color:blue; cursor:pointer' onclick='down()'>Download the Report Here!</span>");
+               $("#liveresult").show();
+               $(".loader").hide();
+               $("#myBtn").click();
+          },
+          error:function(){
+            $(".loader").hide();
+          },
+          completed: function(){
+            
+        },
+
+    });
+  });
+
+  $("#myBtn").click(function(){
+      var modal = document.getElementById("myModal");
+       modal.style.display = "block";
+  });
+
+ $("#close").click(function(){
+      var modal = document.getElementById("myModal");
+      modal.style.display = "none";
+  });
+
+ $("#myBtn1").click(function(){
+      var modal = document.getElementById("myModal1");
+       modal.style.display = "block";
+  });
+
+ $("#myBtn2").click(function(){
+      var modal = document.getElementById("myModal2");
+       modal.style.display = "block";
+  });
+
+ $(".close").click(function(){
+      var modal = document.getElementById("myModal1");
+      modal.style.display = "none";
+      var modal = document.getElementById("myModal2");
+      modal.style.display = "none";
+  });
+
+ $("#betweentwo").click(function(){
+  var liveroad = $("#liveroad").val();
+  var livevehicle = $("#livevehicle").val();
+  var livecasuality =  $("#livecasuality").val();
+  if (liveroad != '' && livevehicle !='' && livecasuality != ''){
+     $("#myBtn1").click();
+  }else{
+    alert("Please fill the mandatory details")
+  }
+ });
+
+ $("#difftime").click(function(){
+    var liveroad = $("#liveroad").val();
+    var livevehicle = $("#livevehicle").val();
+    var livecasuality =  $("#livecasuality").val();
+    if (liveroad != '' && livevehicle !='' && livecasuality != '' ){
+       $("#myBtn2").click();
+    }else{
+      alert("Please fill the mandatory details")
+    }
+ });
+
+ $("#inputDatebtn").click(function(){
+    var liveroad = $("#liveroad").val();
+    var livevehicle = $("#livevehicle").val();
+    var livecasuality =  $("#livecasuality").val();
+    var nextdatetime1  = $("#nextdatetime").val();
+    var d = new Date(nextdatetime1);
+    var day  = d.getDate()
+    var mnt  = d.getMonth()+1
+    var year = d.getFullYear()
+    nextdatetime = year+"-"+mnt+"-"+day;
+    
+     $.ajax({
+        url:"/futurepred", 
+        type: "post", 
+        dataType: 'json',
+        data: {"longtitude":longitude, "latitude":latitude, "liveroad":liveroad, "livevehicle":livevehicle, "livecasuality":livecasuality, "nextdatetime":nextdatetime},
+        beforeSend: function(){
+          $(".loader").show();
+          $("#inputDatebtn").addClass("clickedbtn");
+        },
+        success: function(output){
+              $("#livebtn1").removeAttr("disabled", "true");
+              $("#tlocation1").text(output.curlocation);
+              $("#tregion1").html(output.region);
+              $("#tlocaltime1").html(output.localtime);
+              $("#ttemperature1").html(output.temperature);
+              $("#troveg1").html(output.sroveg);
+              $("#tbasicroadsurf1").html(output.basicroadsurf);
+              $("#tlight1").html(output.light);
+              $("#tweather1").html(output.weather);
+              $("#tcclass1").html(output.scclass);
+              $("#ttypeveg1").html(output.stypeveg);
+              
+              $("#futuretable").show();
+              if (output.prediction == "Serious Accident"){
+                $("#liveresult1").removeClass("greenhold");
+                $("#liveresult1").addClass("redhold");
+                $("#liveresult1").val("Zone Detected As Serious Accidental!");
+              }else{
+                $("#liveresult1").addClass("greenhold");
+                $("#liveresult1").removeClass("redhold");
+                $("#liveresult1").val("Zone Detected As Slight Accidental!");
+              }
+              $("#livedownloadreport1").show();
+              $("#livedownloadreport1").html("The Accident Reference ID is : "+output.refid+". <span style='color:blue; cursor:pointer' onclick='down()'>Download the Report Here!</span>");
+               $("#liveresult1").show();
+               $(".loader").hide();
+               $("#myBtn2").click();
+          $("#inputDatebtn").removeClass("clickedbtn");
+        },
+        error:function(){
+          $(".loader").hide();
+          $("#inputDatebtn").removeClass("clickedbtn");
+        }
+     });
+});
+
+let curlat;
+let curlong;
+const myAPIKey = "6640783fd91f4f8381a2bc1d4a255787";
+
+if (navigator.geolocation) {
+  navigator.geolocation.getCurrentPosition(function(position) {
+      curlat = position.coords.latitude;
+      curlong = position.coords.longitude;
+      $('#latitude').text('Latitude: ' + latitude);
+      $('#longitude').text('Longitude: ' + longitude);
+  }, function(error) {
+      console.error('Error getting user location:', error);
+  });
+} else {
+  console.error('Geolocation is not supported by this browser.');
+}
+
+function getlatlong(locationName) {
+  return fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${locationName}`)
+    .then(response => response.json())
+    .then(data => {
+      if (data.length > 0) {
+        var latitude = data[0].lat;
+        var longitude = data[0].lon;
+        return [latitude, longitude];
+      } else {
+        throw new Error('Location not found');
+      }
+    })
+    .catch(error => {
+      console.error('Error fetching location coordinates:', error);
+      throw error;
+    });
+}
+
+$("#inputDistrictbtn").click(async function(){
+  $(".loader").show();
+  $("#inputDistrictbtn").addClass("clickedbtn");
+  var src = $("#frominputDistrict").val();
+  var dest = $("#inputDistrict").val();
+  var predtype = $("#predtype").val();
+  var livecasuality = $("#livecasuality").val();
+  var livevehicle = $("#livevehicle").val();
+  var liveroad = $("#liveroad").val();
+  var slon = '';
+  var slat = '';
+  var dlon = '';
+  var dlat = '';
+
+  if (predtype == 'current') {
+    slon = curlong;
+    slat = curlat;
+  } else {
+    try {
+      const sdata = await getlatlong(src);
+      slat = sdata[0];
+      slon = sdata[1];
+    } catch (error) {
+      console.error('Error getting source location:', error);
+    }
+  }
+
+  try {
+    const ddata = await getlatlong(dest);
+    dlat = ddata[0];
+    dlon = ddata[1];
+
+    // alert("Type " + predtype);
+    // alert("From " + slat + " " + slat);
+    // alert("To " + dlat + " " + dlat);
+  } catch (error) {
+    console.error('Error getting destination location:', error);
+  }
+
+
+    const map = new maplibregl.Map({
+      container: 'my-map',
+      style: `https://maps.geoapify.com/v1/styles/klokantech-basic/style.json?apiKey=${myAPIKey}`,
+      center: [slon, slat],
+      zoom: 6
+    });
+    map.addControl(new maplibregl.NavigationControl());
+
+    const popup = new maplibregl.Popup();
+
+    navigator.geolocation.getCurrentPosition(function(position) {
+      const userLocation = [position.coords.longitude, position.coords.latitude];
+
+      const userMarker = new maplibregl.Marker({
+          color: "#00008B", // Dark blue color
+        })
+        .setLngLat(userLocation)
+        .setPopup(new maplibregl.Popup().setText("You are here"))
+        .addTo(map);
+    }, function(error) {
+      console.error("Error getting user location:", error);
+    });
+
+
+    let fromloc = src;
+    const fromWaypoint = [slon, slat]; // longitude, latutude
+    const fromWaypointMarker = new maplibregl.Marker().setLngLat(fromWaypoint)
+      .setPopup(new maplibregl.Popup().setText(
+        fromloc
+      )).addTo(map);
+
+    let toloc = dest;
+    const toWaypoint = [dlon, dlat]; // longitude, latutude
+    const toWaypointMarker = new maplibregl.Marker().setLngLat(toWaypoint)
+      .setPopup(new maplibregl.Popup().setText(
+        toloc
+      )).addTo(map);
+
+    let routeData;
+    let routeStepsData;
+    let instructionsData;
+    let stepPointsData;
+    let extractedValues =[]
+
+    fetch(`https://api.geoapify.com/v1/routing?waypoints=lonlat:${fromWaypoint.join(",")}|lonlat:${toWaypoint.join(",")}&mode=hike&details=route_details,elevation&apiKey=${myAPIKey}`).then(res => res.json()).then(routeResult => {
+      routeData = routeResult;
+      const steps = [];
+      const instructions = [];
+      const stepPoints = [];
+
+       console.log(routeData);
+       
+      let coordinatesArray = routeData.features[0].geometry.coordinates[0];
+      console.log(coordinatesArray);
+
+     function shuffle(array) {
+          let currentIndex = array.length, temporaryValue, randomIndex;
+          while (0 !== currentIndex) {
+              randomIndex = Math.floor(Math.random() * currentIndex);
+              currentIndex -= 1;
+              temporaryValue = array[currentIndex];
+              array[currentIndex] = array[randomIndex];
+              array[randomIndex] = temporaryValue;
+          }
+
+          return array;
+      }
+
+      coordinateArrays = shuffle(coordinatesArray);
+      let extractedValues = coordinateArrays.slice(0, 5);
+
+
+        var str_ext = JSON.stringify(extractedValues)
+          console.log(str_ext)
+          $.ajax({
+            url:"/mapseverity", 
+            type: "post", 
+            dataType: 'json',
+            data: {"extractedValues":str_ext, "liveroad":liveroad, "livecasuality":livecasuality, "livevehicle":livevehicle, "curlat":curlat, "curlong":curlong},
+            beforeSend: function(){
+              $(".loader").show()
+            },
+            success: function(output) {
+              var len = output.length - 1
+              $(".loader").hide()
+              var msg = "Your current location is : "+output[len]["curloc"]+". Which is detected as : <b>"+output[len]["curpred"]+"</b>"
+              $("#curloc").html(msg)
+               output.forEach(location => {
+               const userMarker = new maplibregl.Marker({
+                    color: "#FF0000" // Dark red color
+                  })
+                  .setLngLat(location.coordinates)
+                  .setPopup(new maplibregl.Popup().setText(location.name))
+                  .addTo(map);
+
+                  
+               });
+               
+            },
+            completed:function(output){
+               $(".loader").hide()
+             },
+             error:function(){
+               $(".loader").hide()
+             }
+          })
+
+      
+      //console.log(routeData)
+      routeData.features[0].properties.legs.forEach((leg, legIndex) => {
+        const legGeometry = routeData.features[0].geometry.coordinates[legIndex];
+        leg.steps.forEach((step, index) => {
+          if (step.instruction) {
+            instructions.push({
+              "type": "Feature",
+              "geometry": {
+                "type": "Point",
+                "coordinates": legGeometry[step.from_index]
+              },
+              properties: {
+                text: step.instruction.text
+              }
+            });
+          }
+
+          if (index !== 0) {
+            stepPoints.push({
+              "type": "Feature",
+              "geometry": {
+                "type": "Point",
+                "coordinates": legGeometry[step.from_index]
+              },
+              properties: step
+            })
+          }
+
+          if (step.from_index === step.to_index) {
+            // destination point
+            return;
+          }
+
+          const stepGeometry = legGeometry.slice(step.from_index, step.to_index + 5);
+          steps.push({
+            "type": "Feature",
+            "geometry": {
+              "type": "LineString",
+              "coordinates": stepGeometry
+            },
+            properties: step
+          });
+        });
+      });
+
+      routeStepsData = {
+        type: "FeatureCollection",
+        features: steps
+      }
+
+      instructionsData = {
+        type: "FeatureCollection",
+        features: instructions
+      }
+
+      stepPointsData = {
+        type: "FeatureCollection",
+        features: stepPoints
+      }
+
+      map.addSource('route', {
+        type: 'geojson',
+        data: routeData
+      });
+      
+      map.addSource('points', {
+        type: 'geojson',
+        data: instructionsData
+      });
+      
+     addLayerEvents();
+     drawRoute();
+    }, err => console.log(err));
+
+    function drawRoute() {
+    if (!routeData || !routeStepsData || !instructionsData) {
+        return;
+    }
+
+    // Remove existing layers if they exist
+    if (map.getLayer('route-layer')) {
+        map.removeLayer('route-layer');
+    }
+    if (map.getLayer('points-layer')) {
+        map.removeLayer('points-layer');
+    }
+  
+      map.getSource('points').setData(instructionsData);
+      map.addLayer({
+          'id': 'points-layer',
+          'type': 'circle',
+          'source': 'points',
+          'paint': {
+              'circle-radius': 5,
+              'circle-color': "#1a237e",
+              'circle-stroke-color': "#aaa",
+              'circle-stroke-width': 1,
+          }
+      });
+    
+}
+
+
+
+    function addLayerEvents() {
+      map.on('mouseenter', 'route-layer', () => {
+        map.getCanvas().style.cursor = 'pointer';
+      });
+
+      map.on('mouseleave', 'route-layer', () => {
+        map.getCanvas().style.cursor = '';
+      });
+      
+      map.on('mouseenter', 'points-layer', () => {
+        map.getCanvas().style.cursor = 'pointer';
+      });
+
+      map.on('mouseleave', 'points-layer', () => {
+        map.getCanvas().style.cursor = '';
+      });
+      
+
+      map.on('click', 'points-layer', (e) => {
+        const properties = e.features[0].properties;
+        const point = e.features[0].geometry.coordinates;
+        
+        if (properties.text) {
+          popup.setText(properties.text);
+          popup.setLngLat(point);
+          popup.addTo(map);
+          e.preventDefault();
+        }
+      });
+    }
+
+    function showPopup(data, lngLat) {
+    let popupHtml = Object.keys(data).map(key => {
+      return `<div class="popup-property-container">
+                <span class="popup-property-label">${key}: </span>
+                <span class="popup-property-value">${data[key]}</span>
+              </div>`
+    }).join(''); 
+     
+    popup.setLngLat(lngLat).setHTML(popupHtml).addTo(map);
+  }
+
+  // const locations = [
+  //   { coordinates: [77.595208, 8.745314], name: "Accident Zone - Not Safe -Place 1" },
+  //   { coordinates: [77.595889, 8.745178], name: "Accident Zone - Not Safe -Place 1" }
+  // ];
+
+ 
+
+  $(".loader").hide();
+});
+
+
+// Function to create marker icon
+function createMarkerIcon(color) {
+    return L.icon({
+        iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-' + color + '.png'
+    });
+}
+
+  $("#findotherlocation").click(function(){
+    var roveh    =  $("#roveh").val();
+    var roadsurf =  $("#roadsurf").val();
+    var light    =  $("#light").val();
+    var weather  =  $("#weather").val();
+    var cclass   =  $("#cclass").val();
+    var typeveh  =  $("#typeveh").val();
+    var place    =  $("#place").val();
+
+    $.ajax({
+        url:"/anotherlocation", 
+        type: "post", 
+        dataType: 'json',
+        data: {"roveh":roveh, "roadsurf":roadsurf, "light":light, "weather":weather, "cclass":cclass, "typeveh":typeveh, "place":place},
+        beforeSend: function(){
+          $(".loader").show();
+        },
+        success: function(output) {
+          
+              $("#otherlocpred").val(output.prediction);
+              $("#otherlocpred").show();
+              // $("#predlabel").show();
+              if (output.prediction == "Serious Accident"){
+                $("#otherlocpred").removeClass("greenhold");
+                $("#otherlocpred").addClass("redhold");
+                 $("#otherlocpred").val("Zone Detected As Serious Accidental!");
+              }else{
+                $("#otherlocpred").addClass("greenhold");
+                $("#otherlocpred").removeClass("redhold");
+                 $("#otherlocpred").val("Zone Detected As Slight Accidental!");
+              }
+              $(".loader").hide();
+              var down = confirm("The Accident Reference ID is : "+output.refid+"! Do you want to download the report?");
+              if (down){
+                 location.href = "{{ url_for('getrecords') }}"
+              }else{
+                return false
+              }
+          },
+           error:function(){
+            $(".loader").hide();
+          },
+          completed: function(){
+          
+        },
+    });
+  });
+
+
+function getclick(obj){
+  var id = obj.id;
+  var index = id[0];
+  var fieldid = '#city'+index+'field';
+  if ($(fieldid).css("display") == "block"){
+     $(fieldid).slideUp("slow");
+  }else{
+     $(fieldid).slideDown("slow");
+  }
+}
+
+  $("#logoutbtn").click(function(){
+    $.ajax({
+        url:"/logout", 
+        type: "post", 
+        dataType: 'json',
+        data: {},
+        beforeSend: function(){
+          $(".loader").show();
+        },
+        success: function(output) {
+          location.href = "{{ url_for('login') }}"
+        }
+      });
+  });
+
+  $("#reportpagebtn").click(function(){
+    location.href = "{{ url_for('getrecords') }}"
+  });
+  $("#reportdownload").click(function(){
+    location.href = "{{ url_for('getrecords') }}"
+  });
+  $("#reportdownload1").click(function(){
+    location.href = "{{ url_for('getrecords') }}"
+  });
+
+
+  
+
+  function down(){
+    location.href = "{{ url_for('getrecords') }}"
+  }
+</script>
+</html>
+
+
+
+

@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, Intial-scale=1">
+	<title>Accident severity prediction</title>
+	<link rel= "stylesheet" type= "text/css" href= "{{ url_for('static', filename = 'style.css') }}">
+	<script src="{{ url_for('static', filename = 'jquery.js') }}"></script>
+	<style type="text/css">
+		.loader{
+		    position:fixed;
+		    width:100%;
+		    left:0;right:0;top:0;bottom:0;
+		    background-color: rgba(255,255,255,0.7);
+		    z-index:9999;
+		    display:none;
+		}
+
+		@-webkit-keyframes spin {
+		  from {-webkit-transform:rotate(0deg);}
+		  to {-webkit-transform:rotate(360deg);}
+		}
+
+		@keyframes spin {
+		  from {transform:rotate(0deg);}
+		  to {transform:rotate(360deg);}
+		} 
+
+		.loader::after {
+		    content:'';
+		    display:block;
+		    position:absolute;
+		    left:48%;top:40%;
+		    width:40px;height:40px;
+		    border-style:solid;
+		    border-color:black;
+		    border-top-color:transparent;
+		    border-width: 4px;
+		    border-radius:50%;
+		    -webkit-animation: spin .8s linear infinite;
+		    animation: spin .8s linear infinite;
+		}
+		.column {
+		  float: left;
+		  width: 33%;
+		  padding: 10px;
+		}
+		.row:after {
+		  content: "";
+		  display: table;
+		  clear: both;
+		  margin-bottom: 10px;
+		}
+
+		#reporttable th{
+			text-align: center;
+			color: white;
+			background-image: linear-gradient(90deg, #0367a6 0%, #008997 74%);
+			font-weight: bold;
+			border: 1px solid #0367a6;
+		}
+		#reporttable td{
+			text-align: center;
+			border: 1px solid #0367a6;
+		}
+
+		.action{
+			cursor: pointer;
+			color: white;
+			border-radius: 3px;
+			padding: 5px;
+			background-image: linear-gradient(90deg, #0367a6 0%, #008997 74%);
+		}
+	</style>
+</head>
+<body id="reportpage">
+<div class="loader hide"></div>
+
+<div style="position:absolute; top:2%; left:96%">
+  <img src="{{ url_for('static', filename = 'logout.jpg') }}" id="logoutbtn" height="35" width="35" style="border-radius: 3px; cursor: pointer;">
+</div>
+<div style="position:absolute; top:2%; left:93%">
+  <img src="{{ url_for('static', filename = 'accident.jpg') }}" id="mainpagebtn" height="35" width="35" style="border-radius: 3px; cursor: pointer;">
+</div>
+
+<div class="row" style="background-image: linear-gradient(90deg, #0367a6 0%, #008997 74%);">
+	<div class="column"></div>
+	<div class="column">
+		<input type="text" id="searchdata" class="input1"  placeholder="Search here">
+	</div>
+	<div class="column">
+		<button type="button" id="searchdatabtn" class="button" style="background: tomato; color: white; width: 20%">Search</button>
+	</div>
+	
+</div>
+	
+<table id="reporttable" rules="all" style="width: 80%; margin: auto; text-align: center; border: 2px solid #0367a6" >
+	<thead>
+		<tr>
+			<th>S. No</th>
+			<th>Reference No</th>
+			<th>Place</th>
+			<th>Severity</th>
+			<th>Date Time</th>
+			<th>Action</th>
+		</tr>
+	</thead>
+	<tbody id="accidentreports">
+		
+	</tbody>
+</table>
+
+<div id="reportfield" style="display: none;">
+	<div style="border:2px double black;width: 80%;margin: auto;height: 98%;">
+		<div style="border-bottom:1px solid black; padding-bottom: 10px">
+			<center>
+				<h3 style="margin: 5px 0px 0px 0px">Accident Severity Detector</h3>
+				<span>(This is an computer generated report)</span>
+			</center>
+		</div>
+		<br>
+		<div style="clear: both; margin-bottom: 10px">
+			<div style="margin-top: 10px; text-align: center;"><label><b>----  Accident Details   ----</b></label></div>
+			<div style="float: left;width: 100%;padding: 10px;margin-left: 10px;">
+				<table>
+					<tr>
+						<td>Accident Reference ID</td>
+						<td>:</td>
+						<td id="trefid"></td>
+					</tr>
+					<tr>
+						<td>Place</td>
+						<td>:</td>
+						<td id="tplace"></td>
+					</tr>
+					<tr>
+						<td>Severity</td>
+						<td>:</td>
+						<td id="tseverity"></td>
+					</tr>
+					<tr>
+						<td>Date Time</td>
+						<td>:</td>
+						<td id="tdatetime"></td>
+					</tr>
+				</table>
+			</div>
+		</div>
+		
+		<div style="clear: both;">
+			<div style="margin-top: 10px; text-align: center;"><label><b>----  User Details   ----</b></label></div>
+			<div style="float: left;width: 45%;padding: 10px;margin-left: 10px">
+				<table>
+					<tr>
+						<td>User ID</td>
+						<td>:</td>
+						<td id="tuserid"></td>
+					</tr>
+					<tr>
+						<td>User Name</td>
+						<td>:</td>
+						<td id="tusername"></td>
+					</tr>
+					<tr>
+						<td>Role</td>
+						<td>:</td>
+						<td id="trole"></td>
+					</tr>
+					<tr>
+						<td>Phone Number</td>
+						<td>:</td>
+						<td id="tphone"></td>
+					</tr>
+				</table>
+			</div>
+			<div style="float: left;width: 45%;padding: 10px;margin-bottom: 15px">
+				<table>
+					<tr>
+						<td>DOB</td>
+						<td>:</td>
+						<td id="tdob"></td>
+					</tr>
+					<tr>
+						<td>Age</td>
+						<td>:</td>
+						<td id="tage"></td>
+					</tr>
+					<tr>
+						<td>Blood Group</td>
+						<td>:</td>
+						<td id="tbg"></td>
+					</tr>
+					<tr>
+						<td>Email</td>
+						<td>:</td>
+						<td id="temail"></td>
+					</tr>
+				</table>
+			</div>
+		</div>
+		<br><br>
+		<div style="clear: both;">
+			<div style="margin-top: 10px; text-align: center;"><label><b>----  Environment Details   ----</b></label></div>
+			<div style="float: left;width: 45%;padding: 10px;margin-left: 10px">
+				<table>
+					<tr>
+						<td>Road Type</td>
+						<td>:</td>
+						<td id="troadtype"></td>
+					</tr>
+					<tr>
+						<td>Road Surface</td>
+						<td>:</td>
+						<td id="troadsurface"></td>
+					</tr>
+					<tr>
+						<td>Lighting </td>
+						<td>:</td>
+						<td id="tlighting"></td>
+					</tr>
+				</table>
+			</div>
+			<div style="float: left;width: 45%;padding: 10px;margin-bottom: 15px">
+				<table>
+					<tr>
+						<td>Weather</td>
+						<td>:</td>
+						<td id="tweather"></td>
+					</tr>
+					<tr>
+						<td>Casuality Class</td>
+						<td>:</td>
+						<td id="tcclass"></td>
+					</tr>
+					<tr>
+						<td>Vehicle Type</td>
+						<td>:</td>
+						<td id="tvehtype"></td>
+					</tr>
+				</table>
+			</div>
+		</div>
+
+		<div style="bottom: 30; position:absolute;left: 12%">
+			Report Downloaded on <span id="curdate"></span>
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript">
+	let userdata = null
+	$.ajax({
+		url:"/readuserdetails", 
+		type: "get", 
+		dataType: 'json',
+		data: {},
+		beforeSend: function(){
+	        $(".loader").show();
+	    },
+	    success: function(output){
+	    	userdata = output
+	    	$(".loader").hide();
+	    }
+	});
+
+	$("#searchdatabtn").click(function(){
+		updaterecords($("#searchdata").val());
+	});
+
+	$('#reportpage').keypress(function(e){
+        if (event.keyCode === 13) {
+        e.preventDefault();
+        $("#searchdatabtn").click();
+        }
+    });
+
+	updaterecords('');
+	function updaterecords(searchdata){
+		$.ajax({
+			url:"/getrecords", 
+			type: "post", 
+			dataType: 'json',
+			data: {"searchdata":searchdata},
+			beforeSend: function(){
+		        $(".loader").show();
+		    },
+		    success: function(output){
+		    	let appenddata = ''
+		    	if (output.length > 0){
+		    		for(var i=0; i<= output.length-1; i++){
+		    			appenddata += `<tr>
+		    			<td>`+(i+1)+`</td>
+		    			<td>`+"ASP-"+output[i]["referencenumber"]+`</td>
+		    			<td>`+output[i]["place"]+`</td>
+		    			<td>`+output[i]["prediction"]+`</td>
+		    			<td>`+output[i]["accidentdate"]+`</td>
+		    			<td><span class='action mail' onclick=sendmail(`+output[i]["referencenumber"]+`)>Mail</span>&nbsp;&nbsp;<span class='action down' onclick=action(`+output[i]["referencenumber"]+`,'pdf')>Download</span></td>`
+		    		}
+		    	}else{
+		    		appenddata = "<tr><td colspan = '6' style='text-align:center'>No Data Found!</td></tr>"
+		    	}
+		    	$("#accidentreports").html(appenddata);
+		    	$(".loader").hide();
+		    },
+		    error:function(){
+        		$(".loader").hide();
+        		alert("Something went wrong! Please try again.")
+        	}
+		});
+	}
+
+	function diff_years(dt1, dt2){
+	  var diff =(dt2.getTime() - dt1.getTime()) / 1000;
+	  diff /= (60 * 60 * 24);
+	  diff = Math.abs(Math.round(diff/365.25))
+	  return diff;
+	}
+
+	function action(refid, actiontype){
+		$.ajax({
+			url:"/getsingle", 
+			type: "post", 
+			dataType: 'json',
+			data: {"refid":refid},
+			beforeSend: function(){
+		        $(".loader").show();
+		    },
+		    success: function(output){
+		    	$(".loader").hide();
+		    	if (actiontype == 'mail'){
+		    		let emailTo = 'receiver@gmail.com';
+					let emailCC = 'cc@example.com';
+					let emailSub = 'Accident Severity Report , Reference Number  '+ "ASP-"+output[0]["referencenumber"];
+					let ebody = 'Accident Reference Number: ' + "ASP-"+output[0]["referencenumber"] + '\r\n' + 'Place: ' + output[0]["place"]  + '\r\n' + 'Severity: ' + output[0]["prediction"]  + '\r\n' + 'Date Time: ' + output[0]["accidentdate"] + '\r\n' + '\r\n' + '---- Register User Detail ----' + '\r\n' + 'User Name: ' + userdata[0]["username"] + '\r\n' + 'Membership: ' + userdata[0]["role"] + '\r\n' + 'Phone: ' + userdata[0]["phonennumber"] + '\r\n' + 'Email: ' + userdata[0]["email"] + '\r\n' + 'Blood Group: ' + userdata[0]["bloodgroup"] + '\r\n' +  '\r\n' + '---- Accident Environment Factors ----' + '\r\n'+ 'Road Type: ' + output[0]["roadtype"] + '\r\n' + 'Road Surface: ' + output[0]["roadsurface"] + '\r\n' + 'Lighting Condition: ' + output[0]["lightcondition"] + '\r\n' + 'Weather Condition: ' + output[0]["weather"] + '\r\n' + 'Casuality Class: ' + output[0]["casualityclass"] + '\r\n' + 'vehicle Type: ' + output[0]["vehicletype"] + '\r\n' + '\r\n' + '\r\n' + 'With Regards,' + '\r\n' + userdata[0]["username"];
+
+					let emailBody = encodeURIComponent(ebody);
+					window.open(`mailto:${emailTo}?cc=${emailCC}&subject=${emailSub}&body=${emailBody}`, '_self');
+		    	}else{
+
+		    		let currenttime = new Date();
+		    		let adate = new Date(userdata[0]["dob"]);
+		    		let age = diff_years(currenttime, adate) 
+
+		    		$("#trefid").html("ASP-"+output[0]["referencenumber"]);
+		    		$("#tplace").html(output[0]["place"]);
+		    		$("#tseverity").html(output[0]["prediction"]);
+		    		$("#tdatetime").html(output[0]["accidentdate"]);
+		    		$("#tuserid").html("UID-"+userdata[0]["userid"]);
+		    		$("#tusername").html(userdata[0]["username"]);
+		    		$("#trole").html(userdata[0]["role"]);
+		    		$("#tphone").html(userdata[0]["phonennumber"]);
+		    		$("#tdob").html(userdata[0]["dob"]);
+		    		$("#tage").html(age+' Years');
+		    		$("#tbg").html(userdata[0]["bloodgroup"]);
+		    		$("#temail").html(userdata[0]["email"]);
+		    		$("#troadtype").html(output[0]["roadtype"]);
+		    		$("#troadsurface").html(output[0]["roadsurface"]);
+		    		$("#tlighting").html(output[0]["lightcondition"]);
+		    		$("#tweather").html(output[0]["weather"]);
+		    		$("#tcclass").html(output[0]["casualityclass"]);
+		    		$("#tvehtype").html(output[0]["vehicletype"]);
+		    		$("#curdate").html(currenttime);
+
+		    		var accidentReport = $("#reportfield").html();
+			    	var printWindow = window.open('', '', 'height=400,width=800');
+			   		printWindow.document.write(accidentReport);
+			    	printWindow.document.close();
+			    	printWindow.print();
+			    	printWindow.close();
+
+		    		
+		    	}
+		    },
+		    error:function(){
+        		$(".loader").hide();
+        		alert("Something went wrong! Please try again.")
+        	}
+        });
+
+	}
+	
+	function sendmail(refID){
+	
+    	var email = prompt("Enter mail ID to share")
+    	if(email != ""){
+        	$.ajax({
+                url:"/sendmail", 
+                type: "post", 
+                dataType: 'json',
+                data: {"refID":refID, "email":email},
+                  success: function(output){
+                    alert("Mail Sent Successfully")
+                  }
+                });
+    	}else{
+        	alert("Enter mail ID")
+    	}
+                
+    }
+
+	$("#logoutbtn").click(function(){
+    $.ajax({
+        url:"/logout", 
+        type: "post", 
+        dataType: 'json',
+        data: {},
+        beforeSend: function(){
+          $(".loader").show();
+        },
+        success: function(output) {
+          location.href = "{{ url_for('login') }}"
+        }
+      });
+  });
+	$("#mainpagebtn").click(function(){
+		location.href = "{{ url_for('main') }}"
+	});
+
+</script>
+</body>
+</html>

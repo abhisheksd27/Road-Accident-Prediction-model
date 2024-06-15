@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, Intial-scale=1">
+	<title>Accident severity prediction</title>
+	<link rel= "stylesheet" type= "text/css" href= "{{ url_for('static', filename = 'style.css') }}">
+	<script src="{{ url_for('static', filename = 'jquery.js') }}"></script>
+	<style type="text/css">
+		body{
+			width:100%;
+			margin: auto;
+			font-family: Verdana, sans-serif;
+		  	background-image: url("{{ url_for('static', filename = 'register.jpg') }}");
+		  	background-position: center;
+		  	background-repeat: no-repeat;
+		  	background-size: cover;
+		  }
+		  .loader{
+		    position:fixed;
+		    width:100%;
+		    left:0;right:0;top:0;bottom:0;
+		    background-color: rgba(255,255,255,0.7);
+		    z-index:9999;
+		    display:none;
+		}
+
+		@-webkit-keyframes spin {
+		  from {-webkit-transform:rotate(0deg);}
+		  to {-webkit-transform:rotate(360deg);}
+		}
+
+		@keyframes spin {
+		  from {transform:rotate(0deg);}
+		  to {transform:rotate(360deg);}
+		}
+
+		.loader::after {
+		    content:'';
+		    display:block;
+		    position:absolute;
+		    left:48%;top:40%;
+		    width:40px;height:40px;
+		    border-style:solid;
+		    border-color:black;
+		    border-top-color:transparent;
+		    border-width: 4px;
+		    border-radius:50%;
+		    -webkit-animation: spin .8s linear infinite;
+		    animation: spin .8s linear infinite;
+		}
+	</style>
+</head>
+
+<body id="home">
+<div class="loader hide"></div>
+<header><h2>USER REGISTERATION</h2></header>
+<br>
+<div class="anbody">
+<br>
+<center><span class="red" id="errormsg"></span><br>
+<span class="red">Already registered? Please <a href="{{ url_for('login') }}">Login</a><br></span></center>
+<center>
+<!-- <form action="{{ url_for('registeruser') }}" method="POST" name="register" id="register"> -->
+<form>
+<table>
+<tr>
+<th>Username</th>
+<td>
+	<input type="text" name="username" id="username" placeholder="Enter the username" required>
+</td>
+</tr>
+
+<tr>
+<th>Role</th>
+<td>
+	<select name="role" id="role" required>
+		<option value="">Select your role</option>
+		<option value="Police">Police Investigator</option>
+		<option value="Reporter">Reporter</option>
+		<option value="Journalist">Journalist</option>
+		<option value="Employee">EmployeeStudent</option>
+		<option value="Student">Student</option>
+    	<option value="Others">Others</option>
+    </select>
+</td>
+</tr>
+
+<tr>
+<th>Phone</th>
+<td>
+	<input type="number" name="phone" id="phone" placeholder="Enter the phone number">
+</td>
+</tr>
+
+<tr>
+<th>DOB</th>
+<td>
+	<input type="date" name="dob" id="dob" placeholder="Select DOB">
+</td>
+</tr>
+
+<tr>
+<th>Blood Group</th>
+<td>
+	<select id="bloodgroup" name="bloodgroup">
+		<option value="">Select Blood Group</option>
+		<option value="A +ve">A +ve</option>
+		<option value="A -ve">A -ve</option>
+		<option value="B +ve">B +ve</option>
+		<option value="B -ve">B -ve</option>
+		<option value="AB +ve">AB +ve</option>
+		<option value="AB -ve">AB -ve</option>
+		<option value="O +ve">O +ve</option>
+		<option value="O -ve">O -ve</option>
+	</select>
+</td>
+</tr>
+
+<tr>
+<th>E-mail</th>
+<td>
+	<input type="email" name="email" id="email" placeholder="Enter the email">
+</td>
+</tr>
+
+<tr>
+<th>Purpose</th>
+<td>
+	<textarea name="purpose" id="purpose" placeholder="Enter the purpose of using this application"></textarea>
+</td>
+</tr>
+
+<tr>
+<th>Password</th>
+<td>
+	<input type="password" name="password" id='password' placeholder="Enter the password">
+</td>
+</tr>
+
+<tr>
+<th>Confirm Password</th>
+<td>
+	<input type="password" name="confpassword" id='confpassword' placeholder="Please confirm password">
+	<span class="error" id="passworderror" style="display: none">Entered passwords does not match</span>
+</td>
+</tr>
+
+
+<tr>
+<th><input type="reset" value="Reset" class="button" style="background-color:red"></th>
+<td>
+<button type="button" id="registerbtn" class="button">Register</button>
+</td>
+</tr>
+</table>
+
+</form>
+
+</center>
+</div>
+
+<br><br>
+<script type="text/javascript">
+	$("#registerbtn").click(function(){
+		let username   = $("#username").val();
+		let role       = $("#role").val();
+		let phone      = $("#phone").val();
+		let email      = $("#email").val();
+		let purpose    = $("#purpose").val();
+		let dob        = $("#dob").val();
+		let bloodgroup = $("#bloodgroup").val();
+		let pass = $("#password").val();
+		let conPass = $("#confpassword").val();
+
+		if (username == ''){
+			$("#username").focus();
+			alertdata("User name")
+		}else if (role == ''){
+			$("#role").focus();
+			alertdata("Role")
+		}else if (phone == ''){
+			$("#phone").focus();
+			alertdata("Phone")
+		}else if (email == ''){
+			$("#email").focus();
+			alertdata("Email")
+		}else if (purpose == ''){
+			$("#purpose").focus();
+			alertdata("Purpose")
+		}else if (dob == ''){
+			$("#dob").focus();
+			alertdata("DOB")
+		}else if (bloodgroup == ''){
+			$("#bloodgroup").focus();
+			alertdata("Blood Group")
+		}else if (pass == ''){
+			$("#pass").focus();
+			alertdata("Password")
+		}else if (conPass == ''){
+			$("#conPass").focus();
+			alertdata("Confirm Password")
+		}else if(pass != conPass){
+			$("#passworderror").show();
+			return false;
+		}else{
+			$("#passworderror").hide();
+			$.ajax({
+				url:"/registeruser", 
+				type: "post", 
+				dataType: 'json',
+				data: {"username":username, "role":role, "phone":phone, "email":email, "purpose":purpose, "dob":dob, "bloodgroup":bloodgroup, "password":pass},
+				beforeSend: function(){
+			        $(".loader").show();
+			    },
+			    success: function(output){
+			    	$(".loader").hide();
+			    	if (output == 0){
+			    		$('body').scrollTop(0);//need autoscroll to top
+			    		errmsg = 'User detail already present. Please login.'
+			    		$("#errormsg").html(errmsg)
+			    	}else if (output == 1){
+			    		location.href = "{{ url_for('login') }}"
+			    	}else{
+			    		alert("Something went wrong! Please try again.")
+			    	}
+			    },
+			    error:function(){
+            		$(".loader").hide();
+            		alert("Something went wrong! Please try again.")
+            	}
+			});
+		}
+	});
+
+	function alertdata(message){
+		let msg = "Enter Valid "+message   
+		alert(msg)
+		return false
+	}
+</script>
+</body>
+</html>
+
+
+
+
